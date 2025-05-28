@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const toyCollectionDiv = document.querySelector('#toy-collection')
   const toyInputs = document.querySelectorAll('.input-text')
   const toyForm = document.querySelector('.add-toy-form')
-  const likeBtns = document.querySelectorAll('.like-btn')
 
   addBtn.addEventListener("click", () => {
     // hide & seek with the form
@@ -18,6 +17,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const renderToyCard = (toy) => {
+    const toyCard = document.createElement('div')
+    toyCard.classList.add('card')
+
+    const toyName = document.createElement('h2')
+    toyName.textContent = toy.name
+
+    const toyImg = document.createElement('img')
+    toyImg.setAttribute('src', toy.image)
+    toyImg.classList.add('toy-avatar')
+
+    const likeCount = document.createElement('p')
+    likeCount.textContent = `${toy.likes} likes`
+
+    const likeBtn = document.createElement('button')
+    likeBtn.textContent = 'Like ❤️'
+    likeBtn.classList.add('like-btn')
+    likeBtn.setAttribute('id', toy.id)
+
+    likeBtn.addEventListener('click', () => {
+      patchLikes(toy.id, toy.likes)
+        .then(updatedLikeCount => {
+          likeCount.textContent = `${updatedLikeCount} likes`
+          toy.likes = updatedLikeCount
+        })
+    })
+
+    toyCard.append(toyName, toyImg, likeCount, likeBtn)
+    toyCollectionDiv.appendChild(toyCard)
+  }
+
   const getToys = () => {
     fetch('http://localhost:3000/toys', {
       method: 'GET',
@@ -27,36 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     })
       .then(res => res.json())
       .then(toys => {
-        toys.forEach(toy => {
-          const toyCard = document.createElement('div')
-          toyCard.classList.add('card')
-
-          const toyName = document.createElement('h2')
-          toyName.textContent = toy.name
-          const toyImg = document.createElement('img')
-          toyImg.setAttribute('src', toy.image)
-          toyImg.classList.add('toy-avatar')
-          const likeCount = document.createElement('p')
-          likeCount.textContent = `${toy.likes} likes`
-          const likeBtn = document.createElement('button')
-          likeBtn.textContent = 'Like ❤️'
-          likeBtn.classList.add('like-btn')
-          likeBtn.setAttribute('id', toy.id)
-          likeBtn.addEventListener('click', () => {
-            patchLikes(toy.id, toy.likes)
-              .then(updatedLikeCount => {
-                likeCount.textContent = `${updatedLikeCount} likes`
-                toy.likes = updatedLikeCount
-               })
-          })
-
-          toyCard.appendChild(toyName)
-          toyCard.appendChild(toyImg)
-          toyCard.appendChild(likeCount)
-          toyCard.appendChild(likeBtn)
-
-          toyCollectionDiv.appendChild(toyCard)
-        })
+        toys.forEach(renderToyCard)
       })
       .catch(error => console.log('Error: ', error.message))
   }
@@ -77,9 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
         })
     })
       .then(res => res.json())
-      .then(post => {
-        toyCollectionDiv.innerHTML = ''
-        getToys()
+      .then(toy => {
+        renderToyCard(toy)
         toyInputs.forEach(input => input.value = '')
       })
   }
